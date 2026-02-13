@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { listApplications, createProject, createApplication } from '@/lib/coolify';
+import { listApplications, createProject, createApplication, deployApplication } from '@/lib/coolify';
 
 export async function GET() {
   const session = await getSession();
@@ -47,6 +47,14 @@ export async function POST(req) {
       build_pack: 'nixpacks',
       ports_exposes: '3000',
     });
+
+    // Auto-deploy after creation
+    try {
+      await deployApplication(app.uuid);
+    } catch (e) {
+      console.log('Auto-deploy trigger:', e.message);
+    }
+
     return NextResponse.json({ project, application: app });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
