@@ -44,7 +44,7 @@ export async function POST(req) {
     const { name, repository, branch, domain } = await req.json();
 
     // First create a Coolify project
-    const project = await createProject({ name, description: `Kumo project: ${name}` });
+    const project = await createProject({ name, description: name });
 
     // Get the environment UUID from the project
     const envUuid = project.environments?.[0]?.uuid;
