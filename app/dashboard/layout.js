@@ -2,10 +2,11 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-const UserContext = createContext(null);
+var UserContext = createContext(null);
 export function useUser() { return useContext(UserContext); }
 
-function Logo({ size = 26 }) {
+function Logo(props) {
+  var size = props.size || 26;
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <defs>
@@ -22,39 +23,45 @@ function Logo({ size = 26 }) {
   );
 }
 
-function NavItem({ icon, label, href, active, badge }) {
-  const router = useRouter();
+function NavItem(props) {
+  var router = useRouter();
   return (
-    <div onClick={() => router.push(href)} style={{
+    <div onClick={function() { router.push(props.href); }} style={{
       display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
       borderRadius: 8, cursor: "pointer", fontSize: 13.5, fontWeight: 500,
-      background: active ? "rgba(62,207,180,0.08)" : "transparent",
-      color: active ? "#3ecfb4" : "rgba(255,255,255,0.5)",
+      background: props.active ? "rgba(62,207,180,0.08)" : "transparent",
+      color: props.active ? "#3ecfb4" : "rgba(255,255,255,0.5)",
       transition: "all 0.15s", position: "relative",
     }}>
-      <span style={{ fontSize: 16, width: 20, textAlign: "center" }}>{icon}</span>
-      {label}
-      {badge && (
+      <span style={{ fontSize: 16, width: 20, textAlign: "center" }}>{props.icon}</span>
+      {props.label}
+      {props.badge && (
         <span style={{
           marginLeft: "auto", padding: "1px 7px", borderRadius: 100, fontSize: 10, fontWeight: 700,
           background: "rgba(244,63,94,0.15)", color: "#f43f5e",
-        }}>{badge}</span>
+        }}>{props.badge}</span>
+      )}
+      {props.isNew && (
+        <span style={{
+          marginLeft: "auto", padding: "1px 7px", borderRadius: 100, fontSize: 9, fontWeight: 700,
+          background: "rgba(62,207,180,0.12)", color: "#3ecfb4",
+        }}>AI</span>
       )}
     </div>
   );
 }
 
-export default function DashboardLayout({ children }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function DashboardLayout(props) {
+  var pathname = usePathname();
+  var router = useRouter();
+  var [user, setUser] = useState(null);
+  var [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useEffect(function() {
     fetch("/api/auth")
-      .then(r => r.json())
-      .then(d => { setUser(d.user); setLoading(false); })
-      .catch(() => { router.push("/login"); });
+      .then(function(r) { return r.json(); })
+      .then(function(d) { setUser(d.user); setLoading(false); })
+      .catch(function() { router.push("/login"); });
   }, []);
 
   async function logout() {
@@ -74,7 +81,7 @@ export default function DashboardLayout({ children }) {
     );
   }
 
-  const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'K';
+  var initials = user?.name ? user.name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase() : 'K';
 
   return (
     <UserContext.Provider value={user}>
@@ -89,12 +96,23 @@ export default function DashboardLayout({ children }) {
             <span style={{ fontSize: 17, fontWeight: 700, fontFamily: "Manrope, sans-serif" }}>kumo</span>
           </div>
 
-          <button onClick={() => router.push("/dashboard/new")} style={{
-            width: "100%", padding: "10px", borderRadius: 8, border: "1px dashed rgba(62,207,180,0.3)",
-            background: "rgba(62,207,180,0.04)", color: "#3ecfb4", fontSize: 13, fontWeight: 700,
+          {/* AI Create button - primary action */}
+          <button onClick={function() { router.push("/dashboard/create"); }} style={{
+            width: "100%", padding: "11px", borderRadius: 8, border: "none",
+            background: "linear-gradient(135deg, #3ecfb4, #2ba8e0)",
+            color: "#070a0e", fontSize: 13, fontWeight: 700,
+            marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          }}>
+            ⚡ Create with AI
+          </button>
+
+          {/* Import from Git button - secondary */}
+          <button onClick={function() { router.push("/dashboard/new"); }} style={{
+            width: "100%", padding: "10px", borderRadius: 8, border: "1px dashed rgba(255,255,255,0.1)",
+            background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 600,
             marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
           }}>
-            + New Project
+            + Import from Git
           </button>
 
           <NavItem icon="📁" label="Projects" href="/dashboard" active={pathname === "/dashboard"} />
@@ -126,7 +144,7 @@ export default function DashboardLayout({ children }) {
               </div>
               <button onClick={logout} style={{
                 background: "none", border: "none", color: "rgba(255,255,255,0.2)", fontSize: 14,
-                padding: 4,
+                padding: 4, cursor: "pointer",
               }} title="Logout">⏻</button>
             </div>
           </div>
@@ -134,7 +152,7 @@ export default function DashboardLayout({ children }) {
 
         {/* Main */}
         <div style={{ flex: 1, overflow: "auto" }}>
-          {children}
+          {props.children}
         </div>
       </div>
     </UserContext.Provider>
